@@ -7,12 +7,12 @@
 [[plugin]]
 id = "goldesquemoon/screen-mirror"
 name = "Screen Mirror"
-version = "1.0.0"
+version = "1.0.1"
 author = "goldesquemoon"
 license = "MIT"
 icon = "screen-share"
 description = "Mirror the main niri output onto every other display, toggled from the control center or the bar."
-plugin_api = 17
+plugin_api = 24
 deprecated = false
 tags = ["niri", "system", "utility", "shortcut"]
 dependencies = ["niri", "wl-mirror", "python3", "niri-mirror CLI"]

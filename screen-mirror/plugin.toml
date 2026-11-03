@@ -16,8 +16,8 @@
 
 id          = "goldesquemoon/screen-mirror"
 name        = "Screen Mirror"
-version     = "1.0.0"
-plugin_api  = 17
+version     = "1.0.1"
+plugin_api  = 24
 author      = "goldesquemoon"
 license     = "MIT"
 icon        = "screen-share"
