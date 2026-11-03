@@ -1,82 +1,142 @@
-# Noctalia Screen Mirror
+# Noctalia Screen Mirror — mirror the main niri output onto every display (Noctalia v5 plugin)
 
-[Noctalia](https://noctalia.dev) v5 插件：[`screen-mirror`](screen-mirror/README.md) ——
-把 niri 主屏的画面镜像到**每一块新接入的外接显示器**，控制中心/栏一键开关，
-插上就镜像、拔掉就清理。设置页里可配 OSD 提示、启动默认开关、镜像源、排除的显示器、缩放。
+A [Noctalia](https://noctalia.dev) v5 plugin that **mirrors the main niri output onto every other
+connected display**, with a control-center tile, an optional bar widget, and all the display
+options in the plugin settings. Plug a monitor in and it gets a mirror; unplug it and the window is
+cleaned up.
 
-niri 本身没有 output mirroring（`Mirroring is not yet supported`），镜像由配套的
-[`niri-mirror`](https://github.com/Goldppx/niri-mirror) 守护进程用
-[wl-mirror](https://github.com/Ferdi265/wl-mirror) 完成；本插件是它的 UI 与设置桥。
+niri has no output mirroring of its own (`Mirroring is not yet supported`), so the plugin drives
+the companion [`niri-mirror`](https://github.com/Goldppx/niri-mirror) daemon, which renders the
+source output with [wl-mirror](https://github.com/Ferdi265/wl-mirror) and fullscreens that window
+on the target display.
 
-本仓库按官方 `/noctalia-dev/official-plugins` 与 `/noctalia-dev/community-plugins`
-的目录规范组织，可直接作为 `path` / `git` 源使用，也可提交到社区插件商店。
+![Screen Mirror](screen-mirror/thumbnail.webp)
 
-```
-catalog.toml          # 源索引：每个插件一行 [[plugin]]
-.luaurc               # Luau languageMode = nonstrict
-.github/workflows/    # CI：跑 tests/smoke.sh
-install.sh            # 注册本仓库为 path 源并启用插件（无需 root）
-uninstall.sh          # 卸载（--purge 连配置一起删）
-tests/smoke.sh        # 清单/入口/设置/翻译/目录自检
-screen-mirror/        # 目录名 = 插件 id 中 "/" 之后的部分
-```
+## Features
 
-## 安装
+- **Automatic**: hotplugged displays are mirrored without polling — the daemon follows niri's
+  event stream
+- **Control-center tile** and optional **bar widget** with live state (`Mirror On` / `Mirror Off`)
+- **Per-display exclusion list**: a display on it never gets a mirror window, even when plugged in
+- **Fuzzy connector names**: `hdmi` matches `HDMI-A-1` (exact → case-insensitive → unique substring),
+  and a name that matches nothing is reported back with the list of connected outputs
+- **OSD feedback** on every toggle, including toggles made with a keybind
+- **Scaling modes** for unlike resolutions: fit, cover, or exact integer multiples
+
+## Requirements
+
+| Requirement | Why |
+| --- | --- |
+| `niri` | Target compositor; mirroring uses its outputs and its output events. |
+| `wl-mirror` | Renders the source output into a window that gets fullscreened on the target display. |
+| `python3` | Runs the companion daemon that follows niri's event stream. |
+| `niri-mirror CLI (~/.local/bin/niri-mirror, from the niri-mirror install.sh)` | The companion daemon and CLI that do the actual mirroring. |
 
 ```sh
-# 1. 引擎
 sudo pacman -S wl-mirror
 git clone https://github.com/Goldppx/niri-mirror.git
-cd niri-mirror && ./install.sh
+cd niri-mirror && ./install.sh      # installs niri-mirror into ~/.local/bin
+```
 
-# 2. 插件
+## Install
+
+```sh
 git clone https://github.com/Goldppx/noctalia-screen-mirror.git
 cd noctalia-screen-mirror
-./install.sh
-sh tests/smoke.sh
+./install.sh          # registers the source, enables the plugin, prints next steps
 ```
 
-`install.sh` 会做的事：把本目录注册成 Noctalia 插件源、启用 `goldesquemoon/screen-mirror`，
-然后打印后续步骤（加控制中心磁贴、可选栏挂件、可选 `Mod+U` 键位）。
+Then add the tile under **Settings → Control center → Shortcuts → Screen Mirror**, or in
+`~/.config/noctalia/config.toml`:
 
-## 数据流
-
-```
-设置页 ──写入──▶ ~/.config/niri-mirror/config.json ──读取──▶ niri-mirror 守护进程
-                                                                    │
-控制中心磁贴 / 栏挂件 ◀──状态── $XDG_RUNTIME_DIR/niri-mirror/state ◀──写入──┘
+```toml
+[[control_center.shortcuts]]
+type = "goldesquemoon/screen-mirror:mirror"
 ```
 
-* `service.luau` 把插件设置写成守护进程的 JSON 配置，然后 `niri-mirror ensure; reload`
-  （`ensure` 顺手把没在跑的守护进程拉起来）
-* 守护进程每次状态变化都写一份 `key=value` 状态文件，service 转成 `noctalia.state`
-  的 `"status"`，磁贴和挂件只负责渲染
-* 点磁贴 → `noctalia.state "command"` → `niri-mirror toggle`，和键位开关共用同一份状态
+## Usage
 
-## 开发
+| Entry | Type | What it does |
+| --- | --- | --- |
+| `mirror` | control-center shortcut | Toggles mirroring; highlighted means on, right click re-reads the daemon. |
+| `screen-mirror` | bar widget | Same state and toggle from the bar; the tooltip shows source and targets. |
+| `state` | service | Bridges the settings to the daemon's `config.json` and polls its state file. |
+
+Keybind example (niri):
+
+```kdl
+Mod+Shift+U { spawn "noctalia" "msg" "plugin" "goldesquemoon/screen-mirror:state" "all" "toggle"; }
+```
+
+List connector names before filling in the settings:
 
 ```sh
-# 校验清单与设置 schema
-noctalia plugins lint screen-mirror
-
-# 自检（CI 同款）
-sh tests/smoke.sh
-
-# 编辑 .luau 会自动热重载；改 plugin.toml 后
-noctalia msg config-reload
-
-# 直接驱动 service 的命令通道
-noctalia msg plugin goldesquemoon/screen-mirror:state all toggle
-noctalia msg plugin goldesquemoon/screen-mirror:state all sync
+niri-mirror --list-outputs
 ```
 
-编辑器补全（可选，官方 API 类型定义不进仓库）：
+## Settings
+
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `enabled_on_start` | `bool` | `true` | Start the daemon with mirroring on. The off state does not survive a logout; mirroring always starts from this value. |
+| `source_output` | `string` | empty | Connector to mirror from. Empty uses the focused display at startup and re-elects when it disappears. |
+| `excluded_outputs` | `string_list` | empty | Connectors that never get a mirror window, even when plugged in. One per entry. |
+| `scaling` | `select` | fit | How wl-mirror fits the source: `fit` (letterbox), `cover` (fill, crop), `exact` (integer multiples only). |
+| `show_osd` | `bool` | `true` | OSD popup (or notification) on every toggle. |
+| `poll_interval` | `int` | `2000` | How often the tile and widget re-read the daemon state file (minimum 500). |
+
+## FAQ
+
+**Does it work on Hyprland or Sway?** Not yet: the daemon consumes niri's event stream. `wl-mirror`
+itself works on other compositors, but the hotplug handling in this plugin is niri-specific.
+
+**Why do I need a separate daemon?** niri cannot mirror outputs itself, and a mirror has to be a
+real window that follows output changes. The daemon keeps that window in place across hotplug and
+workspace changes; the plugin is its UI and settings bridge.
+
+**The tile says the plugin is not installed.** The `niri-mirror` CLI is missing from
+`~/.local/bin`; run `install.sh` in the niri-mirror repo and re-enable the plugin.
+
+**Can I mirror two different sources at once?** No. One source output is mirrored onto the other
+displays; use the exclusion list to keep a display out of it.
+
+**My monitor is mirrored even though I excluded it.** Exclusion matches connector names; check the
+spelling with `niri-mirror --list-outputs` (partial names are accepted, case-insensitive).
+
+## 中文说明
+
+把 niri 主屏画面镜像到每一块新接入的外接显示器，插上自动镜像、拔掉自动清理。niri 本身没有
+output mirroring，镜像由配套的 [`niri-mirror`](https://github.com/Goldppx/niri-mirror) 守护进程
+用 wl-mirror 完成，本插件是它的 UI 与设置桥。
+
+- 控制中心磁贴 / 栏挂件一键开关，OSD 反馈可在设置里关闭
+- 设置项：`enabled_on_start`、`source_output`、`excluded_outputs`、`scaling`（fit/cover/exact）、
+  `show_osd`、`poll_interval`
+- 显示器名支持模糊匹配：`hdmi` 能匹配 `HDMI-A-1`；写错会回显真实可用列表
+  （`niri-mirror --list-outputs` 可直接查看）
+- 依赖：`niri`、`wl-mirror`、`python3`、`niri-mirror`
+
+安装：
 
 ```sh
-curl -fsSL -o noctalia.d.luau \
-  https://raw.githubusercontent.com/noctalia-dev/official-plugins/main/noctalia.d.luau
+git clone https://github.com/Goldppx/niri-mirror.git && cd niri-mirror && ./install.sh
+git clone https://github.com/Goldppx/noctalia-screen-mirror.git
+cd noctalia-screen-mirror && ./install.sh
 ```
 
-## 许可
+## Search terms / 关键词
+
+Noctalia plugin, Noctalia v5, screen mirroring, output mirror, duplicate display, second monitor,
+hotplug, HDMI, DisplayPort, wl-mirror, niri, niri output mirroring, Wayland, control-center tile,
+bar widget, Arch Linux, CachyOS, 屏幕镜像, 显示器复制, 外接显示器, 热插拔, 投屏
+
+## Links
+
+- Plugin source: [`screen-mirror/`](screen-mirror/)
+- Mirror engine: <https://github.com/Goldppx/niri-mirror>
+- Noctalia: <https://noctalia.dev>
+- Community plugin store: <https://noctalia.dev/plugins>
+
+## License
 
 MIT

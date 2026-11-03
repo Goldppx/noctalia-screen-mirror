@@ -14,5 +14,5 @@ icon = "screen-share"
 description = "Mirror the main niri output onto every other display, toggled from the control center or the bar."
 plugin_api = 17
 deprecated = false
-tags = ["display", "niri", "utility", "shortcut"]
+tags = ["niri", "system", "utility", "shortcut"]
 dependencies = ["niri", "wl-mirror", "python3", "niri-mirror CLI"]

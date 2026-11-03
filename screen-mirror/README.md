@@ -1,5 +1,48 @@
 # Screen Mirror
 
+Mirror the main niri output onto every hotplugged display, toggled from the Noctalia control center, the bar, or a keybind.
+
+## Plugin
+
+| Field | Value |
+| --- | --- |
+| ID | `goldesquemoon/screen-mirror` |
+| Entries | Service: `state`; shortcut: `mirror`; bar widget: `screen-mirror` |
+
+Mirrors the main niri output onto every other connected display, and cleans up when they are
+unplugged. niri has no output mirroring of its own, so the plugin drives the companion
+`niri-mirror` daemon, which renders the source output with wl-mirror and fullscreens it on the
+target outputs.
+
+## Requirements
+
+| Requirement | Why |
+| --- | --- |
+| `niri` | The compositor this plugin targets; mirroring uses its output and output events. |
+| `wl-mirror` | Renders the source output into a window that gets fullscreened on the target display. |
+| `python3` | Runs the companion daemon that follows niri's event stream. |
+| `niri-mirror CLI (~/.local/bin/niri-mirror, from the niri-mirror install.sh)` | The daemon and its CLI ship in the companion repository and do the actual mirroring. |
+
+## Usage
+
+Add the tile under **Settings -> Control center -> Shortcuts -> Screen Mirror**, or toggle it with
+`noctalia msg plugin goldesquemoon/screen-mirror:state all toggle`. The optional `screen-mirror`
+bar widget shows the same state. The settings choose the source output, the excluded outputs,
+OSD feedback and whether mirroring starts enabled.
+
+## Settings
+
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `enabled_on_start` | `bool` | `true` | Turn mirroring on when the plugin starts. |
+| `source_output` | `string` | empty | Output to mirror; empty picks the primary output. |
+| `excluded_outputs` | `string_list` | empty | Outputs that must never be mirrored. |
+| `scaling` | `string` | `fit` | How wl-mirror scales the source into the target display. |
+| `show_osd` | `bool` | `true` | Show an OSD popup when mirroring is toggled. |
+| `poll_interval` | `int` | `2000` | State refresh interval in milliseconds (minimum 500). |
+
+## 中文说明
+
 Mirror the main niri output onto every other display — control-center tile, optional
 bar widget, and all the settings in the plugin settings page. Plugging a monitor in
 mirrors it automatically; unplugging cleans up. A display on the exclusion list **never

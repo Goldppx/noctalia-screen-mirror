@@ -22,7 +22,7 @@ author      = "goldesquemoon"
 license     = "MIT"
 icon        = "screen-share"
 description = "Mirror the main niri output onto every other display, toggled from the control center or the bar."
-tags        = ["display", "niri", "utility", "shortcut"]
+tags        = ["niri", "system", "utility", "shortcut"]
 
 # Shown in the plugin browser so users know what to install before enabling.
 dependencies = [
