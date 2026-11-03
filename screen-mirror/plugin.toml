@@ -29,7 +29,7 @@ dependencies = [
   "niri",
   "wl-mirror",
   "python3",
-  "niri-mirror CLI (~/.local/bin/niri-mirror, from the niri-mirror install.sh)",
+  "niri-mirror CLI (~/.local/bin/niri-mirror, installed by this repo's install.sh)",
 ]
 
 [[setting]]

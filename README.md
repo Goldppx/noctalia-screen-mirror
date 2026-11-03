@@ -30,12 +30,10 @@ on the target display.
 | `niri` | Target compositor; mirroring uses its outputs and its output events. |
 | `wl-mirror` | Renders the source output into a window that gets fullscreened on the target display. |
 | `python3` | Runs the companion daemon that follows niri's event stream. |
-| `niri-mirror CLI (~/.local/bin/niri-mirror, from the niri-mirror install.sh)` | The companion daemon and CLI that do the actual mirroring. |
+| `niri-mirror CLI (~/.local/bin/niri-mirror, installed by this repo's install.sh)` | The companion daemon and CLI that do the actual mirroring. |
 
 ```sh
-sudo pacman -S wl-mirror
-git clone https://github.com/Goldppx/niri-mirror.git
-cd niri-mirror && ./install.sh      # installs niri-mirror into ~/.local/bin
+sudo pacman -S wl-mirror            # the only manual step
 ```
 
 ## Install
@@ -43,8 +41,21 @@ cd niri-mirror && ./install.sh      # installs niri-mirror into ~/.local/bin
 ```sh
 git clone https://github.com/Goldppx/noctalia-screen-mirror.git
 cd noctalia-screen-mirror
-./install.sh          # registers the source, enables the plugin, prints next steps
+./install.sh          # installs the engine if missing, registers the source, enables the plugin
 ```
+
+`install.sh` takes care of the companion daemon too: it uses a `niri-mirror` CLI that is already
+on `PATH` or in `~/.local/bin`, and otherwise clones
+[niri-mirror](https://github.com/Goldppx/niri-mirror) into a temporary directory and runs its
+`install.sh`, which installs the CLI and adds the daemon's niri autostart entry. `wl-mirror`
+remains a normal package:
+
+```sh
+sudo pacman -S wl-mirror
+```
+
+Options: `--no-daemon` (check only, never fetch), `NIRI_MIRROR_DIR=~/dev/niri-mirror ./install.sh`
+(use a local checkout), `SOURCE_NAME=my-plugins ./install.sh` (another source name).
 
 Then add the tile under **Settings → Control center → Shortcuts → Screen Mirror**, or in
 `~/.config/noctalia/config.toml`:
@@ -95,7 +106,7 @@ real window that follows output changes. The daemon keeps that window in place a
 workspace changes; the plugin is its UI and settings bridge.
 
 **The tile says the plugin is not installed.** The `niri-mirror` CLI is missing from
-`~/.local/bin`; run `install.sh` in the niri-mirror repo and re-enable the plugin.
+`~/.local/bin`; run this repo's `install.sh` (it installs the engine) and re-enable the plugin.
 
 **Can I mirror two different sources at once?** No. One source output is mirrored onto the other
 displays; use the exclusion list to keep a display out of it.

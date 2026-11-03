@@ -21,7 +21,7 @@ target outputs.
 | `niri` | The compositor this plugin targets; mirroring uses its output and output events. |
 | `wl-mirror` | Renders the source output into a window that gets fullscreened on the target display. |
 | `python3` | Runs the companion daemon that follows niri's event stream. |
-| `niri-mirror CLI (~/.local/bin/niri-mirror, from the niri-mirror install.sh)` | The daemon and its CLI ship in the companion repository and do the actual mirroring. |
+| `niri-mirror CLI (~/.local/bin/niri-mirror, installed by this repo's install.sh)` | The daemon and its CLI ship in the companion repository and do the actual mirroring. |
 
 ## Usage
 
@@ -71,16 +71,21 @@ polling; this plugin is the UI and the settings bridge.
 ```sh
 git clone https://github.com/Goldppx/noctalia-screen-mirror.git
 cd noctalia-screen-mirror
-./install.sh          # registers the source, enables the plugin, prints next steps
+./install.sh          # installs/checks the engine, registers the source, enables the plugin
 ```
 
-Install the engine first — it is a separate package:
+`install.sh` first looks for the mirroring engine and installs it when it is missing: a
+`niri-mirror` CLI on `PATH` or in `~/.local/bin` is used as is, otherwise the
+[niri-mirror](https://github.com/Goldppx/niri-mirror) repository is cloned to a temporary
+directory and its `install.sh` is run, which puts `niri-mirror` into `~/.local/bin` and adds the
+daemon's autostart entry to your niri config. Only `wl-mirror` stays a manual package:
 
 ```sh
 sudo pacman -S wl-mirror
-git clone https://github.com/Goldppx/niri-mirror.git
-cd niri-mirror && ./install.sh      # puts niri-mirror in ~/.local/bin
 ```
+
+Flags: `--no-daemon` only checks the engine and never fetches it;
+`NIRI_MIRROR_DIR=~/dev/niri-mirror ./install.sh` uses an existing checkout instead of cloning.
 
 ## Dependencies
 
@@ -91,10 +96,10 @@ Declared in `plugin.toml` so the browser shows them:
 | `niri` | compositor; the daemon reads `niri msg` | your session |
 | `wl-mirror` | does the actual output capture/mirroring | `sudo pacman -S wl-mirror` |
 | `python3` | runs the daemon | `sudo pacman -S python` |
-| `niri-mirror` CLI | the daemon itself (`~/.local/bin/niri-mirror`) | run `install.sh` in the [niri-mirror repo](https://github.com/Goldppx/niri-mirror) |
+| `niri-mirror` CLI | the daemon itself (`~/.local/bin/niri-mirror`) | this repo's `install.sh` installs it automatically, or run `install.sh` in the [niri-mirror repo](https://github.com/Goldppx/niri-mirror) |
 
 If the CLI is missing, the tile stays disabled and the service reports it instead of
-failing silently.
+failing silently — running `install.sh` is the fix.
 
 ## How it works
 
