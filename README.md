@@ -54,7 +54,7 @@ remains a normal package:
 sudo pacman -S wl-mirror
 ```
 
-Options: `--no-daemon` (check only, never fetch), `NIRI_MIRROR_DIR=~/dev/niri-mirror ./install.sh`
+Options: `--no-daemon` (check only, never fetch), `NIRI_MIRROR_DIR=/path/to/niri-mirror ./install.sh`
 (use a local checkout), `SOURCE_NAME=my-plugins ./install.sh` (another source name).
 
 Then add the tile under **Settings → Control center → Shortcuts → Screen Mirror**, or in

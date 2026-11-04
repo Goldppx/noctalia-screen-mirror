@@ -85,7 +85,7 @@ sudo pacman -S wl-mirror
 ```
 
 Flags: `--no-daemon` only checks the engine and never fetches it;
-`NIRI_MIRROR_DIR=~/dev/niri-mirror ./install.sh` uses an existing checkout instead of cloning.
+`NIRI_MIRROR_DIR=/path/to/niri-mirror ./install.sh` uses an existing checkout instead of cloning.
 
 ## Dependencies
 
