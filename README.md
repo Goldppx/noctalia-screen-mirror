@@ -29,14 +29,18 @@ on the target display.
 | --- | --- |
 | `niri` | Target compositor; mirroring uses its outputs and its output events. |
 | `wl-mirror` | Renders the source output into a window that gets fullscreened on the target display. |
-| `python3` | Runs the companion daemon that follows niri's event stream. |
-| `niri-mirror CLI (~/.local/bin/niri-mirror, installed by this repo's install.sh)` | The companion daemon and CLI that do the actual mirroring. |
+| `python3` | Runs the mirroring engine, which ships inside the plugin (`engine/niri_mirror.py`). |
 
 ```sh
 sudo pacman -S wl-mirror            # the only manual step
 ```
 
 ## Install
+
+**The easiest way is the Noctalia plugin store**: Settings -> Plugins -> Store -> search
+*Screen Mirror* -> install (`wl-mirror` is the only package to add). The mirroring engine ships
+inside the plugin, so no second repository is needed. The instructions below are for a source
+checkout.
 
 ```sh
 git clone https://github.com/Goldppx/noctalia-screen-mirror.git
